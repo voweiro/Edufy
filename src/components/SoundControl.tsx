@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { playSound, toggleBackgroundMusic, setVolume } from '../utils/sound';
 
 const SoundControl = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolumeState] = useState(0.5);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
@@ -16,6 +23,8 @@ const SoundControl = () => {
     toggleBackgroundMusic();
     playSound('click');
   };
+
+  if (!isClient) return null;
 
   return (
     <div className="fixed top-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg flex items-center gap-3 z-50">

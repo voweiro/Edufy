@@ -4,6 +4,7 @@ import Link from 'next/link';
 import CartoonCharacter from '../components/CartoonCharacter';
 import SoundControl from '../components/SoundControl';
 import { playSound } from '../utils/sound';
+import { useEffect, useState } from 'react';
 
 const gameCategories = [
   {
@@ -49,14 +50,22 @@ const gameCategories = [
 ];
 
 export default function Home() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const handleGameClick = () => {
-    playSound('click');
-    playSound('gameStart');
+    if (isClient) {
+      playSound('click');
+      playSound('gameStart');
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
-      <SoundControl />
+      {isClient && <SoundControl />}
       <div className="game-container py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4 animate-fade-in">
