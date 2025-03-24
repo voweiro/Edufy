@@ -62,6 +62,22 @@ const gameCategories = [
     color: 'bg-gradient-to-r from-indigo-400 to-indigo-600',
     icon: '🔷',
     bgColor: 'bg-indigo-50'
+  },
+  {
+    id: 'words',
+    title: 'Word Association',
+    description: 'Learn word relationships and associations through fun matching',
+    color: 'bg-gradient-to-r from-orange-400 to-orange-600',
+    icon: '📝',
+    bgColor: 'bg-orange-50'
+  },
+  {
+    id: 'memory',
+    title: 'Memory Match',
+    description: 'Improve memory and pattern recognition with card matching',
+    color: 'bg-gradient-to-r from-teal-400 to-teal-600',
+    icon: '🧠',
+    bgColor: 'bg-teal-50'
   }
 ];
 
