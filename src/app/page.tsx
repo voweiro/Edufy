@@ -46,6 +46,22 @@ const gameCategories = [
     color: 'bg-gradient-to-r from-red-400 to-red-600',
     icon: '🔢',
     bgColor: 'bg-red-50'
+  },
+  {
+    id: 'colors',
+    title: 'Color Matching',
+    description: 'Learn colors by matching them with their names and emojis',
+    color: 'bg-gradient-to-r from-pink-400 to-pink-600',
+    icon: '🎨',
+    bgColor: 'bg-pink-50'
+  },
+  {
+    id: 'shapes',
+    title: 'Shape Sorting',
+    description: 'Sort different shapes into their matching categories',
+    color: 'bg-gradient-to-r from-indigo-400 to-indigo-600',
+    icon: '🔷',
+    bgColor: 'bg-indigo-50'
   }
 ];
 
