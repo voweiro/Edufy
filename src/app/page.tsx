@@ -1,8 +1,9 @@
 "use client"
 
-
 import Link from 'next/link';
 import CartoonCharacter from '../components/CartoonCharacter';
+import SoundControl from '../components/SoundControl';
+import { playSound } from '../utils/sound';
 
 const gameCategories = [
   {
@@ -10,78 +11,103 @@ const gameCategories = [
     title: 'Emotion Recognition',
     description: 'Learn to identify and understand different emotions through facial expressions',
     color: 'bg-gradient-to-r from-blue-400 to-blue-600',
-    icon: '😊'
+    icon: '😊',
+    bgColor: 'bg-blue-50'
   },
   {
     id: 'patterns',
     title: 'Pattern Matching',
     description: 'Match similar objects and patterns to improve cognitive skills',
     color: 'bg-gradient-to-r from-green-400 to-green-600',
-    icon: '🔄'
+    icon: '🔄',
+    bgColor: 'bg-green-50'
   },
   {
     id: 'routines',
     title: 'Daily Routines',
     description: 'Learn about daily activities and their proper sequence',
     color: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
-    icon: '📅'
+    icon: '📅',
+    bgColor: 'bg-yellow-50'
   },
   {
     id: 'sounds',
     title: 'Sound Recognition',
     description: 'Identify different sounds and their meanings',
     color: 'bg-gradient-to-r from-purple-400 to-purple-600',
-    icon: '🔊'
+    icon: '🔊',
+    bgColor: 'bg-purple-50'
   },
   {
     id: 'numbers',
     title: 'Number Counting',
     description: 'Count the objects and select the correct number',
     color: 'bg-gradient-to-r from-red-400 to-red-600',
-    icon: '🔢'
+    icon: '🔢',
+    bgColor: 'bg-red-50'
   }
 ];
 
-function playClickSound() {
-  const clickSound = new Audio('/sounds/click-sound.mp3');
-  clickSound.play();
-}
-
 export default function Home() {
+  const handleGameClick = () => {
+    playSound('click');
+    playSound('gameStart');
+  };
+
   return (
-    <div className="game-container py-12 px-4 sm:px-6 lg:px-8">
-      <audio src="/sounds/background-music.mp3" autoPlay loop />
-      <h1 className="text-5xl font-extrabold text-center mb-10 text-gray-800">Welcome to Edufy</h1>
-      <p className="text-center text-xl mb-16 text-gray-600">
-        Choose a fun game to play and learn!
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {gameCategories.map((category) => (
-          <Link 
-            key={category.id}
-            href={`/games/${category.id}`}
-            className={`game-card ${category.color} border-2 border-transparent hover:border-[--primary] transition-transform transform hover:scale-110 shadow-2xl rounded-lg p-6 hover:shadow-[--primary]`}
-            onClick={playClickSound}
-          >
-            <div className="flex items-center gap-4">
-              <span className="text-5xl animate-pulse">{category.icon}</span>
-              <div>
-                <h2 className="text-2xl font-bold mb-2 text-white">{category.title}</h2>
-                <p className="text-white text-opacity-90">{category.description}</p>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+      <SoundControl />
+      <div className="game-container py-12 px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-4 animate-fade-in">
+            Welcome to Edufy
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Choose a fun game to play and learn! Each game is designed to help children develop important skills in an engaging way.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          {gameCategories.map((category) => (
+            <Link 
+              key={category.id}
+              href={`/games/${category.id}`}
+              className={`game-card ${category.bgColor} group relative overflow-hidden`}
+              onClick={handleGameClick}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative flex items-center gap-6">
+                <div className={`w-20 h-20 rounded-full ${category.color} flex items-center justify-center text-5xl transform group-hover:scale-110 transition-transform duration-300`}>
+                  <span className="animate-bounce">{category.icon}</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold mb-2 text-gray-800 group-hover:text-gray-900 transition-colors duration-300">
+                    {category.title}
+                  </h2>
+                  <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
+                    {category.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
 
-      <div className="mt-16 text-center">
-        <button className="btn-primary bg-gradient-to-r from-pink-500 to-red-500 text-white px-8 py-4 rounded-full font-semibold transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50" onClick={playClickSound}>
-          Start with Recommended Game
-        </button>
-      </div>
+        <div className="text-center">
+          <button 
+            className="btn-primary bg-gradient-to-r from-pink-500 to-red-500 text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+            onClick={handleGameClick}
+          >
+            Start with Recommended Game
+          </button>
+        </div>
 
-      <CartoonCharacter message="Click on a game to start playing!" />
+        <CartoonCharacter 
+          message="Click on a game to start playing!" 
+          position="bottom-4 right-4"
+          expression="😊"
+        />
+      </div>
     </div>
   );
 }
