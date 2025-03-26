@@ -71,6 +71,7 @@ interface Level {
   requiredScore: number;
   description: string;
   timeLimit?: number;
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 const levels: Level[] = [
@@ -78,51 +79,59 @@ const levels: Level[] = [
     number: 1,
     patterns: allPatterns.slice(0, 2),
     requiredScore: 4,
-    description: 'Match simple patterns with fruits and animals!'
+    description: 'Match simple patterns with fruits and animals!',
+    difficulty: 'easy'
   },
   {
     number: 2,
     patterns: allPatterns.slice(0, 3),
     requiredScore: 6,
-    description: 'Add shapes to the patterns!'
+    description: 'Add shapes to the pattern matching!',
+    difficulty: 'easy'
   },
   {
     number: 3,
     patterns: allPatterns.slice(0, 4),
     requiredScore: 8,
-    description: 'Match patterns with vehicles!'
+    description: 'Match patterns with vehicles!',
+    difficulty: 'easy'
   },
   {
     number: 4,
     patterns: allPatterns.slice(0, 5),
     requiredScore: 10,
-    description: 'Add food patterns to the mix!'
+    description: 'Add food patterns to the mix!',
+    difficulty: 'medium'
   },
   {
     number: 5,
     patterns: allPatterns.slice(0, 6),
     requiredScore: 12,
-    description: 'Match weather patterns!'
+    description: 'Match weather patterns!',
+    difficulty: 'medium'
   },
   {
     number: 6,
     patterns: allPatterns.slice(0, 7),
     requiredScore: 14,
-    description: 'Add sports patterns!'
+    description: 'Add sports patterns to the challenge!',
+    difficulty: 'medium'
   },
   {
     number: 7,
     patterns: allPatterns,
     requiredScore: 16,
     description: 'All patterns together!',
-    timeLimit: 30
+    timeLimit: 30,
+    difficulty: 'hard'
   },
   {
     number: 8,
     patterns: allPatterns,
     requiredScore: 20,
     description: 'Master level - match all patterns!',
-    timeLimit: 20
+    timeLimit: 20,
+    difficulty: 'hard'
   }
 ];
 
@@ -135,6 +144,8 @@ export default function PatternMatching() {
   const [currentPattern, setCurrentPattern] = useState(levels[0].patterns[Math.floor(Math.random() * levels[0].patterns.length)]);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [isLevelComplete, setIsLevelComplete] = useState(false);
   const [options, setOptions] = useState<Pattern[]>([]);
 
   useEffect(() => {
@@ -144,6 +155,9 @@ export default function PatternMatching() {
         setTimeLeft(prev => {
           if (prev === null || prev <= 0) {
             clearInterval(timer);
+            if (!isLevelComplete) {
+              handleTimeUp();
+            }
             return 0;
           }
           return prev - 1;
@@ -151,7 +165,7 @@ export default function PatternMatching() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, isLevelComplete]);
 
   useEffect(() => {
     // Generate options including the correct pattern and random patterns
@@ -164,9 +178,30 @@ export default function PatternMatching() {
     setOptions([correctPattern, ...otherPatterns].sort(() => Math.random() - 0.5));
   }, [currentPattern, currentLevel]);
 
+  const handleTimeUp = () => {
+    setMessage('Time\'s up! Try again!');
+    setCharacterExpression('😟');
+    setCharacterPosition('top-4 right-4');
+    playSound('failure');
+    toast.error('Time\'s Up!', {
+      position: "top-center",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: false,
+      progress: undefined,
+      className: 'bg-red-500 text-white font-bold text-lg rounded-lg shadow-lg',
+    });
+    handleResetLevel();
+  };
+
   const handlePatternMatch = (selectedPattern: Pattern) => {
+    if (isLevelComplete) return;
+
     if (selectedPattern.id === currentPattern.id) {
-      setScore(score + 1);
+      const newScore = score + 1;
+      setScore(newScore);
       setMessage('Great job! Keep going!');
       setCharacterExpression('😄');
       setCharacterPosition('bottom-4 left-4');
@@ -182,7 +217,9 @@ export default function PatternMatching() {
         className: 'bg-green-500 text-white font-bold text-lg rounded-lg shadow-lg',
       });
 
-      if (score + 1 >= levels[currentLevel].requiredScore) {
+      // Check if level is complete
+      if (newScore >= levels[currentLevel].requiredScore) {
+        setIsLevelComplete(true);
         setShowLevelComplete(true);
         playSound('achievement');
         toast.success('Level Complete! 🎉', {
@@ -195,6 +232,21 @@ export default function PatternMatching() {
           progress: undefined,
           className: 'bg-yellow-500 text-white font-bold text-lg rounded-lg shadow-lg',
         });
+
+        // Check if game is complete
+        if (currentLevel === levels.length - 1) {
+          setGameCompleted(true);
+          toast.success('🎉 Congratulations! You\'ve completed all levels! 🎉', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: false,
+            draggable: false,
+            progress: undefined,
+            className: 'bg-green-500 text-white font-bold text-lg rounded-lg shadow-lg',
+          });
+        }
       }
     } else {
       setMessage('Try again!');
@@ -224,6 +276,7 @@ export default function PatternMatching() {
       setCharacterPosition('bottom-4 right-4');
       setCurrentPattern(levels[currentLevel + 1].patterns[Math.floor(Math.random() * levels[currentLevel + 1].patterns.length)]);
       setShowLevelComplete(false);
+      setIsLevelComplete(false);
       setTimeLeft(levels[currentLevel + 1].timeLimit || null);
     }
   };
@@ -235,6 +288,7 @@ export default function PatternMatching() {
     setCharacterPosition('bottom-4 right-4');
     setCurrentPattern(levels[currentLevel].patterns[Math.floor(Math.random() * levels[currentLevel].patterns.length)]);
     setShowLevelComplete(false);
+    setIsLevelComplete(false);
     setTimeLeft(levels[currentLevel].timeLimit || null);
   };
 
@@ -286,7 +340,8 @@ export default function PatternMatching() {
             <button
               key={pattern.id}
               onClick={() => handlePatternMatch(pattern)}
-              className="p-6 rounded-lg text-center transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[--primary] bg-blue-100 hover:bg-blue-200"
+              className={`p-6 rounded-lg text-center transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[--primary] bg-blue-100 hover:bg-blue-200 ${isLevelComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isLevelComplete}
             >
               <div className="flex justify-center gap-2 mb-2">
                 {pattern.pattern.map((emoji, index) => (
@@ -302,6 +357,9 @@ export default function PatternMatching() {
           <p className="text-lg text-gray-600">
             {levels[currentLevel].description}
           </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Difficulty: {levels[currentLevel].difficulty.charAt(0).toUpperCase() + levels[currentLevel].difficulty.slice(1)}
+          </p>
         </div>
       </div>
 
@@ -312,12 +370,20 @@ export default function PatternMatching() {
         >
           Reset Level
         </button>
-        {showLevelComplete && currentLevel < levels.length - 1 && (
+        {showLevelComplete && !gameCompleted && (
           <button 
             className="btn-primary bg-green-500 hover:bg-green-600"
             onClick={handleNextLevel}
           >
             Next Level →
+          </button>
+        )}
+        {gameCompleted && (
+          <button 
+            className="btn-primary bg-yellow-500 hover:bg-yellow-600"
+            onClick={() => window.location.reload()}
+          >
+            Play Again
           </button>
         )}
         <button className="btn-primary">

@@ -78,6 +78,30 @@ const gameCategories = [
     color: 'bg-gradient-to-r from-teal-400 to-teal-600',
     icon: '🧠',
     bgColor: 'bg-teal-50'
+  },
+  {
+    id: 'conversation-starter',
+    title: 'Conversation Starter',
+    description: 'Learn how to start and maintain conversations',
+    color: 'bg-gradient-to-r from-cyan-400 to-cyan-600',
+    icon: '💬',
+    bgColor: 'bg-cyan-50'
+  },
+  {
+    id: 'emotion-actions',
+    title: 'Emotion Actions',
+    description: 'Learn appropriate actions for different emotions',
+    color: 'bg-gradient-to-r from-rose-400 to-rose-600',
+    icon: '🎭',
+    bgColor: 'bg-rose-50'
+  },
+  {
+    id: 'social-scenarios',
+    title: 'Social Scenarios',
+    description: 'Practice handling different social situations',
+    color: 'bg-gradient-to-r from-violet-400 to-violet-600',
+    icon: '👥',
+    bgColor: 'bg-violet-50'
   }
 ];
 

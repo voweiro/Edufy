@@ -7,16 +7,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import CartoonCharacter from './CartoonCharacter';
 import { playSound } from '../utils/sound';
 
-interface Card {
-  id: number;
-  emoji: string;
-  isFlipped: boolean;
-  isMatched: boolean;
-}
-
 interface Level {
   number: number;
-  pairs: number;
+  word: string;
   description: string;
   timeLimit?: number;
   difficulty: 'easy' | 'medium' | 'hard';
@@ -25,64 +18,59 @@ interface Level {
 const levels: Level[] = [
   {
     number: 1,
-    pairs: 4,
-    description: 'Match 4 pairs of cards!',
+    word: 'CAT',
+    description: 'Build the word "CAT"!',
     difficulty: 'easy'
   },
   {
     number: 2,
-    pairs: 6,
-    description: 'Match 6 pairs of cards!',
+    word: 'DOG',
+    description: 'Build the word "DOG"!',
     difficulty: 'easy'
   },
   {
     number: 3,
-    pairs: 8,
-    description: 'Match 8 pairs of cards!',
+    word: 'BIRD',
+    description: 'Build the word "BIRD"!',
     difficulty: 'easy'
   },
   {
     number: 4,
-    pairs: 10,
-    description: 'Match 10 pairs of cards!',
+    word: 'FISH',
+    description: 'Build the word "FISH"!',
     difficulty: 'medium'
   },
   {
     number: 5,
-    pairs: 12,
-    description: 'Match 12 pairs of cards!',
+    word: 'LION',
+    description: 'Build the word "LION"!',
     difficulty: 'medium'
   },
   {
     number: 6,
-    pairs: 14,
-    description: 'Match 14 pairs of cards!',
+    word: 'BEAR',
+    description: 'Build the word "BEAR"!',
     difficulty: 'medium'
   },
   {
     number: 7,
-    pairs: 16,
-    description: 'Match 16 pairs of cards!',
+    word: 'ELEPHANT',
+    description: 'Build the word "ELEPHANT"!',
     timeLimit: 60,
     difficulty: 'hard'
   },
   {
     number: 8,
-    pairs: 18,
-    description: 'Master level - match 18 pairs!',
+    word: 'GIRAFFE',
+    description: 'Master level - build the word "GIRAFFE"!',
     timeLimit: 45,
     difficulty: 'hard'
   }
 ];
 
-const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦'];
-
-export default function MemoryMatch() {
+export default function WordBuilding() {
   const [currentLevel, setCurrentLevel] = useState(0);
-  const [cards, setCards] = useState<Card[]>([]);
-  const [flippedCards, setFlippedCards] = useState<Card[]>([]);
-  const [matchedPairs, setMatchedPairs] = useState(0);
-  const [moves, setMoves] = useState(0);
+  const [currentWord, setCurrentWord] = useState('');
   const [message, setMessage] = useState(levels[0].description);
   const [characterPosition, setCharacterPosition] = useState('bottom-4 right-4');
   const [characterExpression, setCharacterExpression] = useState('😊');
@@ -90,6 +78,8 @@ export default function MemoryMatch() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isLevelComplete, setIsLevelComplete] = useState(false);
+  const [moves, setMoves] = useState(0);
+  const [availableLetters, setAvailableLetters] = useState<string[]>([]);
 
   useEffect(() => {
     initializeLevel();
@@ -113,26 +103,25 @@ export default function MemoryMatch() {
   }, [timeLeft, isLevelComplete]);
 
   const initializeLevel = () => {
-    const levelEmojis = emojis.slice(0, levels[currentLevel].pairs);
-    const newCards = [...levelEmojis, ...levelEmojis]
-      .sort(() => Math.random() - 0.5)
-      .map((emoji, index) => ({
-        id: index,
-        emoji,
-        isFlipped: false,
-        isMatched: false
-      }));
-    
-    setCards(newCards);
-    setFlippedCards([]);
-    setMatchedPairs(0);
-    setMoves(0);
-    setMessage(levels[currentLevel].description);
+    const level = levels[currentLevel];
+    setCurrentWord('');
+    setMessage(level.description);
     setCharacterExpression('😊');
     setCharacterPosition('bottom-4 right-4');
     setShowLevelComplete(false);
     setIsLevelComplete(false);
-    setTimeLeft(levels[currentLevel].timeLimit || null);
+    setTimeLeft(level.timeLimit || null);
+    setMoves(0);
+
+    // Generate available letters including the target word's letters and some extra random letters
+    const targetLetters = level.word.split('');
+    const extraLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      .split('')
+      .filter(letter => !targetLetters.includes(letter))
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 4); // Add 4 random extra letters
+
+    setAvailableLetters([...targetLetters, ...extraLetters].sort(() => Math.random() - 0.5));
   };
 
   const handleTimeUp = () => {
@@ -153,37 +142,38 @@ export default function MemoryMatch() {
     handleResetLevel();
   };
 
-  const handleCardClick = (card: Card) => {
-    if (isLevelComplete || card.isFlipped || card.isMatched || flippedCards.length >= 2) return;
+  const handleLetterClick = (letter: string) => {
+    if (isLevelComplete) return;
 
-    const newCards = cards.map(c => 
-      c.id === card.id ? { ...c, isFlipped: true } : c
-    );
-    setCards(newCards);
-    setFlippedCards([...flippedCards, card]);
+    setMoves(prev => prev + 1);
+    const newWord = currentWord + letter;
+    setCurrentWord(newWord);
 
-    if (flippedCards.length === 1) {
-      setMoves(moves + 1);
-      const firstCard = flippedCards[0];
-      
-      if (firstCard.emoji === card.emoji) {
-        // Match found
-        const updatedCards = newCards.map(c => 
-          c.id === firstCard.id || c.id === card.id ? { ...c, isMatched: true } : c
-        );
-        setCards(updatedCards);
-        setFlippedCards([]);
-        
-        const newMatchedPairs = matchedPairs + 1;
-        setMatchedPairs(newMatchedPairs);
-        
-        setMessage('Great job! Keep going!');
-        setCharacterExpression('😄');
-        setCharacterPosition('bottom-4 left-4');
-        playSound('success');
-        toast.success('Match Found!', {
+    // Remove the used letter from available letters
+    setAvailableLetters(prev => prev.filter(l => l !== letter));
+
+    if (newWord === levels[currentLevel].word) {
+      // Level complete
+      setIsLevelComplete(true);
+      setShowLevelComplete(true);
+      playSound('achievement');
+      toast.success('Level Complete! 🎉', {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: false,
+        progress: undefined,
+        className: 'bg-yellow-500 text-white font-bold text-lg rounded-lg shadow-lg',
+      });
+
+      // Check if game is complete
+      if (currentLevel === levels.length - 1) {
+        setGameCompleted(true);
+        toast.success('🎉 Congratulations! You\'ve completed all levels! 🎉', {
           position: "top-center",
-          autoClose: 2000,
+          autoClose: 5000,
           hideProgressBar: true,
           closeOnClick: true,
           pauseOnHover: false,
@@ -191,62 +181,29 @@ export default function MemoryMatch() {
           progress: undefined,
           className: 'bg-green-500 text-white font-bold text-lg rounded-lg shadow-lg',
         });
-
-        // Check if level is complete
-        if (newMatchedPairs === levels[currentLevel].pairs) {
-          setIsLevelComplete(true);
-          setShowLevelComplete(true);
-          playSound('achievement');
-          toast.success('Level Complete! 🎉', {
-            position: "top-center",
-            autoClose: 3000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: false,
-            progress: undefined,
-            className: 'bg-yellow-500 text-white font-bold text-lg rounded-lg shadow-lg',
-          });
-
-          // Check if game is complete
-          if (currentLevel === levels.length - 1) {
-            setGameCompleted(true);
-            toast.success('🎉 Congratulations! You\'ve completed all levels! 🎉', {
-              position: "top-center",
-              autoClose: 5000,
-              hideProgressBar: true,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: false,
-              progress: undefined,
-              className: 'bg-green-500 text-white font-bold text-lg rounded-lg shadow-lg',
-            });
-          }
-        }
-      } else {
-        // No match
-        setTimeout(() => {
-          const resetCards = newCards.map(c => 
-            c.id === firstCard.id || c.id === card.id ? { ...c, isFlipped: false } : c
-          );
-          setCards(resetCards);
-          setFlippedCards([]);
-          setMessage('Try again!');
-          setCharacterExpression('😟');
-          setCharacterPosition('top-4 right-4');
-          playSound('failure');
-          toast.error('Try Again!', {
-            position: "top-center",
-            autoClose: 2000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: false,
-            progress: undefined,
-            className: 'bg-red-500 text-white font-bold text-lg rounded-lg shadow-lg',
-          });
-        }, 1000);
       }
+    } else if (newWord.length === levels[currentLevel].word.length) {
+      // Wrong word
+      setMessage('Try again!');
+      setCharacterExpression('😟');
+      setCharacterPosition('top-4 right-4');
+      playSound('failure');
+      toast.error('Try Again!', {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: false,
+        progress: undefined,
+        className: 'bg-red-500 text-white font-bold text-lg rounded-lg shadow-lg',
+      });
+      handleResetLevel();
+    } else {
+      setMessage('Keep going!');
+      setCharacterExpression('😄');
+      setCharacterPosition('bottom-4 left-4');
+      playSound('success');
     }
   };
 
@@ -279,35 +236,48 @@ export default function MemoryMatch() {
 
       <div className="bg-white rounded-xl p-8 shadow-lg">
         <h1 className="text-3xl font-bold text-center mb-8">
-          Memory Match Game
+          Word Building Game
         </h1>
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-lg font-semibold">Progress</span>
-            <span className="text-lg font-semibold">{matchedPairs}/{levels[currentLevel].pairs}</span>
+            <span className="text-lg font-semibold">{currentWord.length}/{levels[currentLevel].word.length}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-4">
             <div 
               className="bg-blue-500 h-4 rounded-full transition-all duration-300"
-              style={{ width: `${(matchedPairs / levels[currentLevel].pairs) * 100}%` }}
+              style={{ width: `${(currentWord.length / levels[currentLevel].word.length) * 100}%` }}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-          {cards.map(card => (
+        <div className="flex justify-center gap-4 mb-12">
+          {Array.from(levels[currentLevel].word).map((letter, index) => (
+            <div
+              key={index}
+              className={`w-16 h-16 flex items-center justify-center text-3xl font-bold rounded-lg ${
+                index < currentWord.length
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-gray-100 text-gray-400'
+              }`}
+            >
+              {index < currentWord.length ? currentWord[index] : '?'}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-5 gap-4 mb-8">
+          {availableLetters.map((letter, index) => (
             <button
-              key={card.id}
-              onClick={() => handleCardClick(card)}
-              className={`aspect-square text-4xl rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[--primary] ${
-                card.isFlipped || card.isMatched
-                  ? 'bg-blue-100'
-                  : 'bg-gray-100 hover:bg-gray-200'
-              } ${isLevelComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
+              key={index}
+              onClick={() => handleLetterClick(letter)}
+              className={`p-4 text-2xl font-bold rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[--primary] ${
+                isLevelComplete ? 'opacity-50 cursor-not-allowed' : 'bg-blue-100 hover:bg-blue-200'
+              }`}
               disabled={isLevelComplete}
             >
-              {card.isFlipped || card.isMatched ? card.emoji : '?'}
+              {letter}
             </button>
           ))}
         </div>

@@ -30,59 +30,68 @@ interface Level {
   colors: Color[];
   requiredScore: number;
   description: string;
-  timeLimit?: number; // Optional time limit in seconds
+  timeLimit?: number;
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 const levels: Level[] = [
   {
     number: 1,
-    colors: allColors.slice(0, 2), // Red and Blue
+    colors: allColors.slice(0, 2),
     requiredScore: 4,
-    description: 'Match red and blue colors!'
+    description: 'Match red and blue colors!',
+    difficulty: 'easy'
   },
   {
     number: 2,
-    colors: allColors.slice(0, 3), // Red, Blue, Green
+    colors: allColors.slice(0, 3),
     requiredScore: 6,
-    description: 'Add green to the mix!'
+    description: 'Add green to the mix!',
+    difficulty: 'easy'
   },
   {
     number: 3,
-    colors: allColors.slice(0, 4), // Red, Blue, Green, Yellow
+    colors: allColors.slice(0, 4),
     requiredScore: 8,
-    description: 'Now with yellow!'
+    description: 'Now with yellow!',
+    difficulty: 'easy'
   },
   {
     number: 4,
-    colors: allColors.slice(0, 5), // Red, Blue, Green, Yellow, Purple
+    colors: allColors.slice(0, 5),
     requiredScore: 10,
-    description: 'Add purple to the challenge!'
+    description: 'Add purple to the challenge!',
+    difficulty: 'medium'
   },
   {
     number: 5,
-    colors: allColors.slice(0, 6), // Red, Blue, Green, Yellow, Purple, Orange
+    colors: allColors.slice(0, 6),
     requiredScore: 12,
-    description: 'All basic colors together!'
+    description: 'All basic colors together!',
+    difficulty: 'medium'
   },
   {
     number: 6,
-    colors: allColors.slice(0, 7), // Add Pink
+    colors: allColors.slice(0, 7),
     requiredScore: 14,
-    description: 'Add pink to the rainbow!'
+    description: 'Add pink to the rainbow!',
+    difficulty: 'medium'
   },
   {
     number: 7,
-    colors: allColors, // All colors
+    colors: allColors,
     requiredScore: 16,
     description: 'All colors together!',
-    timeLimit: 30
+    timeLimit: 30,
+    difficulty: 'hard'
   },
   {
     number: 8,
     colors: allColors,
     requiredScore: 20,
     description: 'Master level - match all colors!',
-    timeLimit: 20
+    timeLimit: 20,
+    difficulty: 'hard'
   }
 ];
 
@@ -95,6 +104,8 @@ export default function ColorMatching() {
   const [currentColor, setCurrentColor] = useState(levels[0].colors[Math.floor(Math.random() * levels[0].colors.length)]);
   const [showLevelComplete, setShowLevelComplete] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [isLevelComplete, setIsLevelComplete] = useState(false);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -103,6 +114,9 @@ export default function ColorMatching() {
         setTimeLeft(prev => {
           if (prev === null || prev <= 0) {
             clearInterval(timer);
+            if (!isLevelComplete) {
+              handleTimeUp();
+            }
             return 0;
           }
           return prev - 1;
@@ -110,11 +124,32 @@ export default function ColorMatching() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, isLevelComplete]);
+
+  const handleTimeUp = () => {
+    setMessage('Time\'s up! Try again!');
+    setCharacterExpression('😟');
+    setCharacterPosition('top-4 right-4');
+    playSound('failure');
+    toast.error('Time\'s Up!', {
+      position: "top-center",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: false,
+      progress: undefined,
+      className: 'bg-red-500 text-white font-bold text-lg rounded-lg shadow-lg',
+    });
+    handleResetLevel();
+  };
 
   const handleColorMatch = (selectedColor: Color) => {
+    if (isLevelComplete) return;
+
     if (selectedColor.id === currentColor.id) {
-      setScore(score + 1);
+      const newScore = score + 1;
+      setScore(newScore);
       setMessage('Great job! Keep going!');
       setCharacterExpression('😄');
       setCharacterPosition('bottom-4 left-4');
@@ -131,7 +166,8 @@ export default function ColorMatching() {
       });
 
       // Check if level is complete
-      if (score + 1 >= levels[currentLevel].requiredScore) {
+      if (newScore >= levels[currentLevel].requiredScore) {
+        setIsLevelComplete(true);
         setShowLevelComplete(true);
         playSound('achievement');
         toast.success('Level Complete! 🎉', {
@@ -144,6 +180,21 @@ export default function ColorMatching() {
           progress: undefined,
           className: 'bg-yellow-500 text-white font-bold text-lg rounded-lg shadow-lg',
         });
+
+        // Check if game is complete
+        if (currentLevel === levels.length - 1) {
+          setGameCompleted(true);
+          toast.success('🎉 Congratulations! You\'ve completed all levels! 🎉', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: false,
+            draggable: false,
+            progress: undefined,
+            className: 'bg-green-500 text-white font-bold text-lg rounded-lg shadow-lg',
+          });
+        }
       }
     } else {
       setMessage('Try again!');
@@ -173,6 +224,7 @@ export default function ColorMatching() {
       setCharacterPosition('bottom-4 right-4');
       setCurrentColor(levels[currentLevel + 1].colors[Math.floor(Math.random() * levels[currentLevel + 1].colors.length)]);
       setShowLevelComplete(false);
+      setIsLevelComplete(false);
       setTimeLeft(levels[currentLevel + 1].timeLimit || null);
     }
   };
@@ -184,6 +236,7 @@ export default function ColorMatching() {
     setCharacterPosition('bottom-4 right-4');
     setCurrentColor(levels[currentLevel].colors[Math.floor(Math.random() * levels[currentLevel].colors.length)]);
     setShowLevelComplete(false);
+    setIsLevelComplete(false);
     setTimeLeft(levels[currentLevel].timeLimit || null);
   };
 
@@ -238,8 +291,9 @@ export default function ColorMatching() {
             <button
               key={color.id}
               onClick={() => handleColorMatch(color)}
-              className="p-6 rounded-lg text-center transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[--primary]"
+              className={`p-6 rounded-lg text-center transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[--primary] ${isLevelComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
               style={{ backgroundColor: color.hex }}
+              disabled={isLevelComplete}
             >
               <span className="text-3xl mb-2 block">{color.emoji}</span>
               <span className="text-xl font-medium text-white">{color.name}</span>
@@ -251,6 +305,9 @@ export default function ColorMatching() {
           <p className="text-lg text-gray-600">
             {levels[currentLevel].description}
           </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Difficulty: {levels[currentLevel].difficulty.charAt(0).toUpperCase() + levels[currentLevel].difficulty.slice(1)}
+          </p>
         </div>
       </div>
 
@@ -261,12 +318,20 @@ export default function ColorMatching() {
         >
           Reset Level
         </button>
-        {showLevelComplete && currentLevel < levels.length - 1 && (
+        {showLevelComplete && !gameCompleted && (
           <button 
             className="btn-primary bg-green-500 hover:bg-green-600"
             onClick={handleNextLevel}
           >
             Next Level →
+          </button>
+        )}
+        {gameCompleted && (
+          <button 
+            className="btn-primary bg-yellow-500 hover:bg-yellow-600"
+            onClick={() => window.location.reload()}
+          >
+            Play Again
           </button>
         )}
         <button className="btn-primary">
